@@ -1,10 +1,10 @@
 import os
 
-import gym
+import gymnasium as gym
 import numpy as np
 import torch
-from gym.spaces.box import Box
-from gym.wrappers import Monitor
+from gymnasium.spaces.box import Box
+from gymnasium.wrappers import Monitor
 
 from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv, VecEnvWrapper
 from stable_baselines3.common.vec_env.vec_video_recorder import VecVideoRecorder

@@ -3,11 +3,11 @@ import math
 from collections import deque
 from time import perf_counter
 
-import gym
+import gymnasium as  gym
 import numpy as np
-from gym import ObservationWrapper, spaces
-from gym.wrappers import TimeLimit as GymTimeLimit
-from gym.wrappers import Monitor as GymMonitor
+from gymnasium import ObservationWrapper, spaces
+from gymnasium.wrappers import TimeLimit as GymTimeLimit
+from gymnasium.wrappers import Monitor as GymMonitor
 
 
 class RecordEpisodeStatistics(gym.Wrapper):

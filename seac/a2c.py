@@ -7,9 +7,9 @@ import torch.nn.functional as F
 
 import numpy as np
 
-import gym
+import gymnasium as gym
 from model import Policy, FCNetwork
-from gym.spaces.utils import flatdim
+from gymnasium.spaces.utils import flatdim
 from storage import RolloutStorage
 from sacred import Ingredient
 
