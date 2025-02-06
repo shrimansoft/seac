@@ -4,12 +4,12 @@ import gymnasium as gym
 import numpy as np
 import torch
 from gymnasium.spaces.box import Box
-from gymnasium.wrappers import Monitor
+# from gymnasium.wrappers import Monitor
 
 from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv, VecEnvWrapper
 from stable_baselines3.common.vec_env.vec_video_recorder import VecVideoRecorder
 from stable_baselines3.common.vec_env.vec_normalize import VecNormalize as VecNormalize_
-from wrappers import TimeLimit, Monitor
+from wrappers import TimeLimit, RecordEpisodeStatistics
 
 
 class MADummyVecEnv(DummyVecEnv):
@@ -22,16 +22,20 @@ class MADummyVecEnv(DummyVecEnv):
 def make_env(env_id, seed, rank, time_limit, wrappers, monitor_dir):
     def _thunk():
 
-        env = gym.make(env_id)
-        env.seed(seed + rank)
+        env = gym.make(env_id,render_mode="rgb_array")
+        env.reset(seed=seed + rank)
+        env.action_space.seed(seed + rank)
 
         if time_limit:
-            env = TimeLimit(env, time_limit)
+            env = TimeLimit(env, max_episode_steps=time_limit)
+
         for wrapper in wrappers:
             env = wrapper(env)
         
         if monitor_dir:
-            env = Monitor(env, monitor_dir, lambda ep: int(ep==0), force=True, uid=str(rank))
+            # env = Monitor(env, monitor_dir, lambda ep: int(ep==0), force=True, uid=str(rank))
+            env = RecordEpisodeStatistics(env)
+
 
         return env
 
@@ -46,8 +50,10 @@ def make_vec_envs(
     ]
 
     if dummy_vecenv or len(envs) == 1 or monitor_dir:
+        print("Using DummyVecEnv")
         envs = MADummyVecEnv(envs)
     else:
+        print("Using SubprocVecEnv")
         envs = SubprocVecEnv(envs, start_method="fork")
 
     envs = VecPyTorch(envs, device)

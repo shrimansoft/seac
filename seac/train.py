@@ -24,7 +24,7 @@ from envs import make_vec_envs
 from wrappers import RecordEpisodeStatistics, SquashDones
 from model import Policy
 
-import robotic_warehouse # noqa
+import rware as robotic_warehouse # noqa
 import lbforaging # noqa
 
 ex = Experiment(ingredients=[algorithm])
@@ -163,6 +163,7 @@ def main(
 
     if loss_dir:
         loss_dir = path.expanduser(loss_dir.format(id=str(_run._id)))
+        print(loss_dir)
         utils.cleanup_log_dir(loss_dir)
         writer = SummaryWriter(loss_dir)
     else:
@@ -175,6 +176,8 @@ def main(
     utils.cleanup_log_dir(save_dir)
 
     torch.set_num_threads(1)
+
+    print("env_name", env_name)
     envs = make_vec_envs(
         env_name,
         seed,
@@ -185,11 +188,15 @@ def main(
         algorithm["device"],
     )
 
+    print("Sucessfully created envs")
+
     agents = [
         A2C(i, osp, asp)
         for i, (osp, asp) in enumerate(zip(envs.observation_space, envs.action_space))
     ]
+
     obs = envs.reset()
+    print("Sucessfully reset envs",envs)
 
     for i in range(len(obs)):
         agents[i].storage.obs[0].copy_(obs[i])
@@ -269,9 +276,9 @@ def main(
             _log.info(
                 f"Updates {j}, num timesteps {total_num_steps}, FPS {int(total_num_steps / (end - start))}"
             )
-            _log.info(
-                f"Last {len(all_infos)} training episodes mean reward {squashed['episode_reward'].sum():.3f}"
-            )
+            # _log.info(
+            #     f"Last {len(all_infos)} training episodes mean reward {squashed['episode_reward'].sum():.3f}"
+            # )
 
             for k, v in squashed.items():
                 _run.log_scalar(k, v, j)
