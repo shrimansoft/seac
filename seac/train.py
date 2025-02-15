@@ -142,7 +142,7 @@ def evaluate(
     )
 
 
-@ex.automain
+@ex.main
 def main(
     _run,
     _log,
@@ -306,3 +306,6 @@ def main(
             for i, v in enumerate(videos):
                 _run.add_artifact(v, f"u{j}.{i}.mp4")
     envs.close()
+
+
+ex.run(config_updates={"env_name": "rware-tiny-2ag-v2", "time_limit": 1})
