@@ -16,7 +16,7 @@ from sacred.observers import (  # noqa
     QueuedMongoObserver,
     QueueObserver,
 )
-from torch.utils.tensorboard import SummaryWriter
+from torch.utils.tensorboard.writer import SummaryWriter
 
 import utils
 from a2c import A2C, algorithm
