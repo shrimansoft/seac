@@ -5,7 +5,7 @@ from torch.utils.data.sampler import BatchSampler, SubsetRandomSampler
 def _flatten_helper(T, N, _tensor):
     return _tensor.view(T * N, *_tensor.size()[2:])
 
-class RolloutStorage(object):
+class RolloutStorage():
     def __init__(
         self,
         obs_space,
