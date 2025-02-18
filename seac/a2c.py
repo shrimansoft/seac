@@ -43,15 +43,15 @@ class A2C:
     @algorithm.capture()
     def __init__(
         self,
-        agent_id,
-        obs_space,
-        action_space,
-        lr,
-        adam_eps,
-        recurrent_policy,
-        num_steps,
-        num_processes,
-        device,
+        agent_id: int,
+        obs_space: gym.Space,
+        action_space: gym.Space,
+        lr: float,
+        adam_eps: float,
+        recurrent_policy: bool,
+        num_steps: int,
+        num_processes: int,
+        device: str,
     ):
         self.agent_id = agent_id
         self.obs_size = flatdim(obs_space)
