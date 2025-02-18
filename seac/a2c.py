@@ -1,17 +1,16 @@
 import os
 
+import gymnasium as gym
+from gymnasium.spaces.utils import flatdim
+import numpy as np
+from sacred import Ingredient
 import torch
 import torch.nn as nn
-import torch.optim as optim
 import torch.nn.functional as F
+import torch.optim as optim
 
-import numpy as np
-
-import gymnasium as gym
-from model import Policy, FCNetwork
-from gymnasium.spaces.utils import flatdim
+from model import FCNetwork, Policy
 from storage import RolloutStorage
-from sacred import Ingredient
 
 algorithm = Ingredient("algorithm")
 
