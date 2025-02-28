@@ -10,46 +10,65 @@ For the experiments in LBF and RWARE, please install from:
 
 Also requires, PyTorch 1.6+
 
-## Training - SEAC
-To train the agents in the paper, navigate to the seac directory:
-```
+## Setup
+
+We use Poetry for dependency management. To install Poetry, follow the instructions [here](https://python-poetry.org/docs/#installation).
+
+To set up the environment, run the following commands:
+
+```bash
+# Clone the repository
+git clone https://github.com/your-repo/seac.git
 cd seac
+
+# Install dependencies
+poetry install
+
+# Activate the virtual environment
+source "$( poetry env list --full-path | grep Activated | cut -d' ' -f1 )/bin/activate"
 ```
 
-And run:
+the above command is taken from [stackoverflow](https://stackoverflow.com/q/60580332)
 
-```train
-python train.py with <env config>
+
+## Training - SEAC
+
+To train the agents, navigate to the `seac` directory and run the training script with the desired configuration:
+
+```bash
+cd seac
+python train.py --env_name=rware-tiny-2ag-v2 --time_limit=500
 ```
 
-Valid environment configs are: 
-- `env_name=Foraging-15x15-3p-4f-v0 time_limit=25`
-- ...
-- `env_name=Foraging-12x12-2p-1f-v0 time_limit=25` or any other foraging environment size/configuration.
-- `env_name=rware-tiny-2ag-v1 time_limit=500` 
-- `env_name=rware-tiny-4ag-v1 time_limit=500` 
-- ...
-- `env_name=rware-tiny-2ag-hard-v1 time_limit=500` or any other rware environment size/configuration.
+You can customize the training by passing different arguments. For example:
+
+```bash
+python train.py --env_name=Foraging-15x15-3p-4f-v0 --time_limit=25
+```
+
+Here are some valid environment configurations:
+- `--env_name=Foraging-15x15-3p-4f-v0 --time_limit=25`
+- `--env_name=Foraging-12x12-2p-1f-v0 --time_limit=25`
+- `--env_name=rware-tiny-2ag-v1 --time_limit=500`
+- `--env_name=rware-tiny-4ag-v1 --time_limit=500`
+
 ## Training - SEQL
 
-To train the agents in the paper, navigate to the seac directory:
-```
-cd seql
-```
+To train the agents in SEQL, navigate to the `seql` directory and run the training script. Possible options are:
 
-And run the training script. Possible options are: 
-- `python lbf_train.py --env Foraging-12x12-2p-1f-v0` 
-- ...
-- `python lbf_train.py --env Foraging-15x15-3p-4f-v0` or any other foraging environment size/configuration.
-- `python rware_train.py --env "rware-tiny-2ag-v1"`
-- ...
-- `python rware_train.py --env "rware-tiny-4ag-v1"`or any other rware environment size/configuration.
+```bash
+cd seql
+python lbf_train.py --env Foraging-12x12-2p-1f-v0
+python lbf_train.py --env Foraging-15x15-3p-4f-v0
+python rware_train.py --env "rware-tiny-2ag-v1"
+python rware_train.py --env "rware-tiny-4ag-v1"
+```
 
 ## Evaluation/Visualization - SEAC
 
-To load and render the pretrained models in SEAC, run in the seac directory
+To load and render the pretrained models in SEAC, run in the `seac` directory:
 
-```eval
+```bash
 python evaluate.py
 ```
 
