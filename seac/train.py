@@ -128,9 +128,14 @@ def evaluate(
 
     eval_envs.close()
     info = _squash_info(all_infos)
-    _log.info(
-        f"Evaluation using {len(all_infos)} episodes: mean reward {info['episode_reward']:.5f}\n"
-    )
+    if 'episode_reward' in info:
+        _log.info(
+            f"Evaluation using {len(all_infos)} episodes: mean reward {info['episode_reward']:.5f}\n"
+        )
+    else:
+        _log.info(
+            f"Evaluation using {len(all_infos)} episodes: 'episode_reward' key not found in info\n"
+        )
 
 def main():
     args = parse_args()
