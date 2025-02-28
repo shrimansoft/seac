@@ -1,9 +1,9 @@
 import os
+import argparse
 
 import gymnasium as gym
 from gymnasium.spaces.utils import flatdim
 import numpy as np
-from sacred import Ingredient
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -12,47 +12,18 @@ import torch.optim as optim
 from model import FCNetwork, Policy
 from storage import RolloutStorage
 
-algorithm = Ingredient("algorithm")
-
-
-@algorithm.config
-def config():
-    lr = 3e-4
-    adam_eps = 0.001
-    gamma = 0.99
-    use_gae = False
-    gae_lambda = 0.95
-    entropy_coef = 0.01
-    value_loss_coef = 0.5
-    max_grad_norm = 0.5
-
-    use_proper_time_limits = True
-    recurrent_policy = False
-    use_linear_lr_decay = False
-
-    seac_coef = 1.0
-
-    num_processes = 4
-    num_steps = 5
-
-    # device = "cpu"
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-
-
 class A2C:
-
-    @algorithm.capture()
     def __init__(
         self,
         agent_id: int,
         obs_space: gym.Space,
         action_space: gym.Space,
-        lr: float,
-        adam_eps: float,
-        recurrent_policy: bool,
-        num_steps: int,
-        num_processes: int,
-        device: str,
+        lr: float = 3e-4,
+        adam_eps: float = 0.001,
+        recurrent_policy: bool = False,
+        num_steps: int = 5,
+        num_processes: int = 4,
+        device: str = "cuda" if torch.cuda.is_available() else "cpu",
     ):
         self.agent_id = agent_id
         self.obs_size = flatdim(obs_space)
@@ -91,9 +62,8 @@ class A2C:
         for k, v in self.saveables.items():
             v.load_state_dict(checkpoint[k].state_dict())
 
-    @algorithm.capture
-    def compute_returns(self, use_gae, gamma, gae_lambda,
-                        use_proper_time_limits):
+    def compute_returns(self, use_gae=False, gamma=0.99, gae_lambda=0.95,
+                        use_proper_time_limits=True):
         with torch.no_grad():
             next_value = self.model.get_value(
                 self.storage.obs[-1],
@@ -109,15 +79,14 @@ class A2C:
             use_proper_time_limits,
         )
 
-    @algorithm.capture
     def update(
         self,
         storages,
-        value_loss_coef,
-        entropy_coef,
-        seac_coef,
-        max_grad_norm,
-        device,
+        value_loss_coef=0.5,
+        entropy_coef=0.01,
+        seac_coef=1.0,
+        max_grad_norm=0.5,
+        device="cuda" if torch.cuda.is_available() else "cpu",
     ):
 
         obs_shape = self.storage.obs.size()[2:]

@@ -6,20 +6,14 @@ import time
 from collections import deque
 from os import path
 from pathlib import Path
+import argparse
 
 import numpy as np
 import torch
-from sacred import Experiment
-from sacred.observers import (  # noqa
-    FileStorageObserver,
-    MongoObserver,
-    QueuedMongoObserver,
-    QueueObserver,
-)
 from torch.utils.tensorboard.writer import SummaryWriter
 
 import utils
-from a2c import A2C, algorithm
+from a2c import A2C
 from envs import make_vec_envs
 from wrappers import RecordEpisodeStatistics, SquashDones
 from model import Policy
@@ -27,42 +21,41 @@ from model import Policy
 import rware as robotic_warehouse # noqa
 import lbforaging # noqa
 
-ex = Experiment(ingredients=[algorithm])
-ex.captured_out_filter = lambda captured_output: "Output capturing turned off."
-ex.observers.append(FileStorageObserver("./results/sacred"))
-
 logging.basicConfig(
     level=logging.INFO,
     format="(%(process)d) [%(levelname).1s] - (%(asctime)s) - %(name)s >> %(message)s",
     datefmt="%m/%d %H:%M:%S",
 )
 
-
-@ex.config
-def config():
-    env_name = None
-    time_limit = None
-    wrappers = (
-        RecordEpisodeStatistics,
-        SquashDones,
-    )
-    dummy_vecenv = False
-
-    num_env_steps = 100e6
-
-    eval_dir = "./results/video/{id}"
-    loss_dir = "./results/loss/{id}"
-    save_dir = "./results/trained_models/{id}"
-
-    log_interval = 2000
-    save_interval = int(1e6)
-    eval_interval = int(1e6)
-    episodes_per_eval = 8
-
-
-for conf in glob.glob("configs/*.yaml"):
-    name = f"{Path(conf).stem}"
-    ex.add_named_config(name, conf)
+def parse_args():
+    parser = argparse.ArgumentParser(description="Training script")
+    parser.add_argument("--env_name", type=str, required=True, help="Environment name")
+    parser.add_argument("--time_limit", type=int, default=None, help="Time limit")
+    parser.add_argument("--num_env_steps", type=float, default=100e6, help="Number of environment steps")
+    parser.add_argument("--eval_dir", type=str, default="./results/video/{id}", help="Evaluation directory")
+    parser.add_argument("--loss_dir", type=str, default="./results/loss/{id}", help="Loss directory")
+    parser.add_argument("--save_dir", type=str, default="./results/trained_models/{id}", help="Save directory")
+    parser.add_argument("--log_interval", type=int, default=2000, help="Log interval")
+    parser.add_argument("--save_interval", type=int, default=int(1e6), help="Save interval")
+    parser.add_argument("--eval_interval", type=int, default=int(1e6), help="Evaluation interval")
+    parser.add_argument("--episodes_per_eval", type=int, default=8, help="Episodes per evaluation")
+    parser.add_argument("--lr", type=float, default=3e-4, help="Learning rate")
+    parser.add_argument("--adam_eps", type=float, default=0.001, help="Adam epsilon")
+    parser.add_argument("--gamma", type=float, default=0.99, help="Discount factor")
+    parser.add_argument("--use_gae", action="store_true", help="Use GAE")
+    parser.add_argument("--gae_lambda", type=float, default=0.95, help="GAE lambda")
+    parser.add_argument("--entropy_coef", type=float, default=0.01, help="Entropy coefficient")
+    parser.add_argument("--value_loss_coef", type=float, default=0.5, help="Value loss coefficient")
+    parser.add_argument("--max_grad_norm", type=float, default=0.5, help="Max gradient norm")
+    parser.add_argument("--use_proper_time_limits", action="store_true", help="Use proper time limits")
+    parser.add_argument("--recurrent_policy", action="store_true", help="Use recurrent policy")
+    parser.add_argument("--use_linear_lr_decay", action="store_true", help="Use linear learning rate decay")
+    parser.add_argument("--seac_coef", type=float, default=1.0, help="SEAC coefficient")
+    parser.add_argument("--num_processes", type=int, default=4, help="Number of processes")
+    parser.add_argument("--num_steps", type=int, default=5, help="Number of steps")
+    parser.add_argument("--device", type=str, default="cuda" if torch.cuda.is_available() else "cpu", help="Device")
+    parser.add_argument("--seed", type=int, default=0, help="Random seed")
+    return parser.parse_args()
 
 def _squash_info(info):
     info = [i for i in info if i]
@@ -74,8 +67,6 @@ def _squash_info(info):
         new_info[key] = mean
     return new_info
 
-
-@ex.capture
 def evaluate(
     agents,
     monitor_dir,
@@ -85,10 +76,10 @@ def evaluate(
     wrappers,
     dummy_vecenv,
     time_limit,
-    algorithm,
+    args,
     _log,
 ):
-    device = algorithm["device"]
+    device = args.device
 
     eval_envs = make_vec_envs(
         env_name,
@@ -141,51 +132,34 @@ def evaluate(
         f"Evaluation using {len(all_infos)} episodes: mean reward {info['episode_reward']:.5f}\n"
     )
 
+def main():
+    args = parse_args()
 
-@ex.main
-def main(
-    _run,
-    _log,
-    num_env_steps,
-    env_name,
-    seed,
-    algorithm,
-    dummy_vecenv,
-    time_limit,
-    wrappers,
-    save_dir,
-    eval_dir,
-    loss_dir,
-    log_interval,
-    save_interval,
-    eval_interval,
-):
-
-    if loss_dir:
-        loss_dir = path.expanduser(loss_dir.format(id=str(_run._id)))
+    if args.loss_dir:
+        loss_dir = path.expanduser(args.loss_dir.format(id=str(args.seed)))
         print(loss_dir)
         utils.cleanup_log_dir(loss_dir)
         writer = SummaryWriter(loss_dir)
     else:
         writer = None
 
-    eval_dir = path.expanduser(eval_dir.format(id=str(_run._id)))
-    save_dir = path.expanduser(save_dir.format(id=str(_run._id)))
+    eval_dir = path.expanduser(args.eval_dir.format(id=str(args.seed)))
+    save_dir = path.expanduser(args.save_dir.format(id=str(args.seed)))
 
     utils.cleanup_log_dir(eval_dir)
     utils.cleanup_log_dir(save_dir)
 
     torch.set_num_threads(1)
 
-    print("env_name", env_name)
+    print("env_name", args.env_name)
     envs = make_vec_envs(
-        env_name,
-        seed,
-        dummy_vecenv,
-        algorithm["num_processes"],
-        time_limit,
-        wrappers,
-        algorithm["device"],
+        args.env_name,
+        args.seed,
+        False,
+        args.num_processes,
+        args.time_limit,
+        (RecordEpisodeStatistics, SquashDones),
+        args.device,
     )
 
     print("Sucessfully created envs")
@@ -196,22 +170,21 @@ def main(
     ]
 
     obs = envs.reset()
-    print("Sucessfully reset envs",envs)
+    print("Sucessfully reset envs", envs)
 
     for i in range(len(obs)):
         agents[i].storage.obs[0].copy_(obs[i])
-        agents[i].storage.to(algorithm["device"])
+        agents[i].storage.to(args.device)
 
     start = time.time()
     num_updates = (
-        int(num_env_steps) // algorithm["num_steps"] // algorithm["num_processes"]
-    )
+        int(args.num_env_steps) // args.num_steps // args.num_processes)
 
     all_infos = deque(maxlen=10)
 
     for j in range(1, num_updates + 1):
 
-        for step in range(algorithm["num_steps"]):
+        for step in range(args.num_steps):
             # Sample actions
             with torch.no_grad():
                 n_value, n_action, n_action_log_prob, n_recurrent_hidden_states = zip(
@@ -266,26 +239,26 @@ def main(
         for agent in agents:
             agent.storage.after_update()
 
-        if j % log_interval == 0 and len(all_infos) > 1:
+        if j % args.log_interval == 0 and len(all_infos) > 1:
             squashed = _squash_info(all_infos)
 
             total_num_steps = (
-                (j + 1) * algorithm["num_processes"] * algorithm["num_steps"]
+                (j + 1) * args.num_processes * args.num_steps 
             )
             end = time.time()
-            _log.info(
+            logging.info(
                 f"Updates {j}, num timesteps {total_num_steps}, FPS {int(total_num_steps / (end - start))}"
             )
-            # _log.info(
+            # logging.info(
             #     f"Last {len(all_infos)} training episodes mean reward {squashed['episode_reward'].sum():.3f}"
             # )
 
             for k, v in squashed.items():
-                _run.log_scalar(k, v, j)
+                logging.info(f"{k}: {v}")
             all_infos.clear()
 
-        if save_interval is not None and (
-            j > 0 and j % save_interval == 0 or j == num_updates
+        if args.save_interval is not None and (
+            j > 0 and j % args.save_interval == 0 or j == num_updates
         ):
             cur_save_dir = path.join(save_dir, f"u{j}")
             for agent in agents:
@@ -294,18 +267,25 @@ def main(
                 agent.save(save_at)
             archive_name = shutil.make_archive(cur_save_dir, "xztar", save_dir, f"u{j}")
             shutil.rmtree(cur_save_dir)
-            _run.add_artifact(archive_name)
 
-        if eval_interval is not None and (
-            j > 0 and j % eval_interval == 0 or j == num_updates
+        if args.eval_interval is not None and (
+            j > 0 and j % args.eval_interval == 0 or j == num_updates
         ):
             evaluate(
                 agents, os.path.join(eval_dir, f"u{j}"),
+                args.episodes_per_eval,
+                args.env_name,
+                args.seed,
+                (RecordEpisodeStatistics, SquashDones),
+                False,
+                args.time_limit,
+                args,
+                logging,
             )
             videos = glob.glob(os.path.join(eval_dir, f"u{j}") + "/*.mp4")
             for i, v in enumerate(videos):
-                _run.add_artifact(v, f"u{j}.{i}.mp4")
+                logging.info(f"Video {i}: {v}")
     envs.close()
 
-
-ex.run(config_updates={"env_name": "rware-tiny-2ag-v2", "time_limit": 1})
+if __name__ == "__main__":
+    main()
