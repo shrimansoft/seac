@@ -160,6 +160,7 @@ def main():
         args.time_limit,
         (RecordEpisodeStatistics, SquashDones),
         args.device,
+        monitor_dir=True
     )
 
     print("Sucessfully created envs")
