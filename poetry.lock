@@ -1814,6 +1814,27 @@ typing-extensions = {version = ">=4.0.0,<5.0", markers = "python_version < \"3.1
 jupyter = ["ipywidgets (>=7.5.1,<9)"]
 
 [[package]]
+name = "rware"
+version = "2.0.0"
+description = "Multi-Robot Warehouse environment for reinforcement learning"
+optional = false
+python-versions = "*"
+groups = ["main"]
+files = [
+    {file = "rware-2.0.0-py3-none-any.whl", hash = "sha256:48cad445d99a224fba9fa7835f320138d1fe5ea74dd1771b96c817be3b53f01c"},
+    {file = "rware-2.0.0.tar.gz", hash = "sha256:f12ac159981c659b4cf069fdb7ce8385214d66263fe41aba882c80ff275199c2"},
+]
+
+[package.dependencies]
+gymnasium = "*"
+networkx = "*"
+numpy = "*"
+pyglet = "<2"
+
+[package.extras]
+test = ["pytest"]
+
+[[package]]
 name = "sacred"
 version = "0.8.7"
 description = "Facilitates automated and reproducible experimental research"
@@ -2370,4 +2391,4 @@ tomli = {version = ">=2.0.1", markers = "python_version < \"3.11\""}
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10"
-content-hash = "96ea99726640db7ad5b812754fa4c30512e44f11f9e2a088d121f49c399251b0"
+content-hash = "bda573d137869f0ea9f417cf2de8e7e9557bd70aa61e69e60fd5a06fb764504f"
