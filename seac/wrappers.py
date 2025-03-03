@@ -35,7 +35,7 @@ class RecordEpisodeStatistics(gym.Wrapper):
         done = [terminated, truncated]
         self.episode_reward += np.array(reward, dtype=np.float64)
         self.episode_length += 1
-        if all(done):
+        if any(done):
             info["episode_reward"] = self.episode_reward
             for i, agent_reward in enumerate(self.episode_reward):
                 info[f"agent{i}/episode_reward"] = agent_reward
