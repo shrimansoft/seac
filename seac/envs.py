@@ -22,7 +22,7 @@ class MADummyVecEnv(DummyVecEnv):
 def make_env(env_id, seed, rank, time_limit, wrappers, monitor_dir):
     def _thunk():
 
-        env = gym.make(env_id,render_mode="rgb_array")
+        env = gym.make(env_id,render_mode="rgb_array", max_episode_steps=100)
         env.reset(seed=seed + rank)
         env.action_space.seed(seed + rank)
 
