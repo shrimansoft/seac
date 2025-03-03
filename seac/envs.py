@@ -43,7 +43,7 @@ def make_env(env_id, seed, rank, time_limit, wrappers, monitor_dir):
 
 
 def make_vec_envs(
-    env_name, seed, dummy_vecenv, parallel, time_limit, wrappers, device, monitor_dir=False
+    env_name, seed, dummy_vecenv, parallel, time_limit, wrappers, device, monitor_dir=True
 ):
     envs = [
         make_env(env_name, seed, i, time_limit, wrappers,monitor_dir) for i in range(parallel)
