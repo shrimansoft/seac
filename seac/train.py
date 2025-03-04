@@ -27,6 +27,17 @@ logging.basicConfig(
     datefmt="%m/%d %H:%M:%S",
 )
 
+def get_next_id(file_path):
+    if os.path.exists(file_path):
+        with open(file_path, 'r') as f:
+            last_id = int(f.read().strip())
+    else:
+        last_id = 0
+    next_id = last_id + 1
+    with open(file_path, 'w') as f:
+        f.write(str(next_id))
+    return next_id
+
 def parse_args():
     parser = argparse.ArgumentParser(description="Training script")
     parser.add_argument("--env_name", type=str, required=True, help="Environment name")
@@ -55,6 +66,7 @@ def parse_args():
     parser.add_argument("--num_steps", type=int, default=5, help="Number of steps")
     parser.add_argument("--device", type=str, default="cuda" if torch.cuda.is_available() else "cpu", help="Device")
     parser.add_argument("--seed", type=int, default=0, help="Random seed")
+    parser.add_argument("--id_file", type=str, default="./results/last_id.txt", help="File to store the last used id")
     return parser.parse_args()
 
 def _squash_info(info):
@@ -139,17 +151,18 @@ def evaluate(
 
 def main():
     args = parse_args()
+    run_id = get_next_id(args.id_file)
 
     if args.loss_dir:
-        loss_dir = path.expanduser(args.loss_dir.format(id=str(args.seed)))
+        loss_dir = path.expanduser(args.loss_dir.format(id=str(run_id)))
         print(loss_dir)
         utils.cleanup_log_dir(loss_dir)
         writer = SummaryWriter(loss_dir)
     else:
         writer = None
 
-    eval_dir = path.expanduser(args.eval_dir.format(id=str(args.seed)))
-    save_dir = path.expanduser(args.save_dir.format(id=str(args.seed)))
+    eval_dir = path.expanduser(args.eval_dir.format(id=str(run_id)))
+    save_dir = path.expanduser(args.save_dir.format(id=str(run_id)))
 
     utils.cleanup_log_dir(eval_dir)
     utils.cleanup_log_dir(save_dir)
