@@ -15,7 +15,7 @@ from torch.utils.tensorboard.writer import SummaryWriter
 import utils
 from a2c import A2C
 from envs import make_vec_envs
-from wrappers import RecordEpisodeStatistics, SquashDones
+from wrappers import RecordEpisodeStatistics
 from model import Policy
 
 import rware as robotic_warehouse # noqa
@@ -163,9 +163,9 @@ def main():
         False,
         args.num_processes,
         args.time_limit,
-        (RecordEpisodeStatistics, SquashDones),
+        (RecordEpisodeStatistics,),
         args.device,
-        monitor_dir=True
+        monitor_dir= False
     )
 
     print("Sucessfully created envs")
@@ -282,7 +282,7 @@ def main():
                 args.episodes_per_eval,
                 args.env_name,
                 args.seed,
-                (RecordEpisodeStatistics, SquashDones),
+                (RecordEpisodeStatistics,),
                 False,
                 args.time_limit,
                 args,
