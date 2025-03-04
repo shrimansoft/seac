@@ -5,6 +5,7 @@ import numpy as np
 import torch
 from gymnasium.spaces.box import Box
 # from gymnasium.wrappers import Monitor
+from gymnasium.wrappers import RecordVideo
 
 from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv, VecEnvWrapper
 from stable_baselines3.common.vec_env.vec_video_recorder import VecVideoRecorder
@@ -34,7 +35,9 @@ def make_env(env_id, seed, rank, time_limit, wrappers, monitor_dir):
         
         if monitor_dir:
             # env = Monitor(env, monitor_dir, lambda ep: int(ep==0), force=True, uid=str(rank))
-            env = RecordEpisodeStatistics(env)
+            trigger = lambda t: t % 10 == 0
+            env = RecordVideo(env, video_folder=monitor_dir, episode_trigger=trigger, disable_logger=False)
+            # env = RecordEpisodeStatistics(env)
 
 
         return env
