@@ -102,6 +102,10 @@ dependencies = [
     "rware @ git+https://github.com/semitable/robotic-warehouse.git"
 ]
 
+[tool.poetry]
+packages = [{include = "seac", from = "seac"}]
+
+
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
