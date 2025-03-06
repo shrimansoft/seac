@@ -99,7 +99,8 @@ dependencies = [
     "wrapt (==1.17.2)",
     "yapf (==0.43.0)",
     "moviepy (>=2.1.2,<3.0.0)",
-    "rware @ git+https://github.com/semitable/robotic-warehouse.git"
+    "rware @ git+https://github.com/semitable/robotic-warehouse.git",
+    "click (>=8.1.8,<9.0.0)"
 ]
 
 [tool.poetry]
