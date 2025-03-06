@@ -184,7 +184,7 @@ def main():
     print("Sucessfully created envs")
 
     agents = [
-        A2C(i, osp, asp)
+        A2C(i, osp, asp,num_processes=args.num_processes, device=args.device)
         for i, (osp, asp) in enumerate(zip(envs.observation_space, envs.action_space))
     ]
 
