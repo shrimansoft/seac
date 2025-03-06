@@ -268,12 +268,14 @@ def main():
             logging.info(
                 f"Updates {j}, num timesteps {total_num_steps}, FPS {int(total_num_steps / (end - start))}"
             )
-            # logging.info(
-            #     f"Last {len(all_infos)} training episodes mean reward {squashed['episode_reward'].sum():.3f}"
-            # )
+            logging.info(
+                f"Last {len(all_infos)} training episodes mean reward {squashed['episode_reward'].sum():.3f}"
+            )
 
             for k, v in squashed.items():
                 logging.info(f"{k}: {v}")
+                if writer:
+                    writer.add_scalar(f"training/{k}", v, j)
             all_infos.clear()
 
         if args.save_interval is not None and (
