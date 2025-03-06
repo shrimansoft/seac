@@ -23,12 +23,15 @@ class RecordEpisodeStatistics(gym.Wrapper):
         self.length_queue = deque(maxlen=deque_size)
 
     def reset(self, **kwargs):
-        observation = super().reset(**kwargs)
-        self.episode_reward = 0
+        observation,info = super().reset(**kwargs)
+        self.episode_reward = np.array([0,0],dtype=np.float64)
         self.episode_length = 0
         self.t0 = perf_counter()
+        info['episode_reward'] = self.episode_reward
+        info['episode_length'] = self.episode_length
+        info['episode_time'] = perf_counter() - self.t0
 
-        return observation
+        return observation, info
 
     def step(self, action):
         observation, reward, terminated, truncated, info = super().step(action)
@@ -87,6 +90,7 @@ class SquashDones(gym.Wrapper):
 
 
 class GlobalizeReward(gym.RewardWrapper):
+
     def reward(self, reward):
         return self.n_agents * [sum(reward)]
 
