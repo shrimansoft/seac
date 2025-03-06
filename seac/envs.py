@@ -23,12 +23,12 @@ class MADummyVecEnv(DummyVecEnv):
 def make_env(env_id, seed, rank, time_limit, wrappers, monitor_dir):
     def _thunk():
 
-        env = gym.make(env_id,render_mode="rgb_array", max_episode_steps=100)
+        env = gym.make(env_id,render_mode="rgb_array")
         env.reset(seed=seed + rank)
         env.action_space.seed(seed + rank)
 
         if time_limit:
-            env = TimeLimit(env, max_episode_steps=time_limit)
+            env = TimeLimit(env, max_episode_steps=time_limit) # NOTE we can diractlly set the max_episode_steps in the make function
 
         for wrapper in wrappers:
             env = wrapper(env)
