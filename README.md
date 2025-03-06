@@ -72,6 +72,14 @@ To load and render the pretrained models in SEAC, run in the `seac` directory:
 python evaluate.py
 ```
 
+
+## Tools
+### To remove the not good results in bulk 
+
+```shell
+find . -type d -regex './\(loss\|trained_models\|video\)/\(9\|20\|19\|18\|17\|10\)' -exec rm -r {} +
+```
+
 ## Citation
 ```
 @inproceedings{christianos2020shared,
